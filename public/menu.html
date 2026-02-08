@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Simple Shop POS - Menu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+
+<body class="customer-view">
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="brand">
+            <h1>☕ Coffee Corner</h1> <!-- Dynamic later -->
+            <p>Table <span id="tableNumberDisplay">--</span></p>
+        </div>
+    </header>
+
+    <!-- Categories -->
+    <nav class="category-scroll">
+        <button class="cat-btn active" onclick="filterMenu('all')">All</button>
+        <button class="cat-btn" onclick="filterMenu('coffee')">Coffee</button>
+        <button class="cat-btn" onclick="filterMenu('tea')">Tea</button>
+        <button class="cat-btn" onclick="filterMenu('food')">Food</button>
+    </nav>
+
+    <!-- Menu Grid -->
+    <main class="menu-grid" id="menuContainer">
+        <!-- JS will populate this -->
+        <div class="loading-spinner">Loading Menu...</div>
+    </main>
+
+    <!-- Floating Cart Button -->
+    <button class="cart-float-btn" onclick="openCart()">
+        <span class="cart-icon">🛒</span>
+        <span class="cart-count" id="cartCount">0</span>
+        <span class="cart-total" id="cartTotal">$0.00</span>
+    </button>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content bottom-sheet">
+            <div class="modal-header">
+                <h2>Your Order</h2>
+                <button class="close-btn" onclick="closeCart()">×</button>
+            </div>
+
+            <div id="cartItems" class="cart-items-list">
+                <!-- Cart items go here -->
+                <div class="empty-cart">Your cart is empty</div>
+            </div>
+
+            <div class="cart-footer">
+                <div class="total-row">
+                    <span>Total</span>
+                    <span id="modalTotal">$0.00</span>
+                </div>
+                <div class="form-group">
+                    <label>Table Number</label>
+                    <select id="tableSelect">
+                        <option value="1">Table 1</option>
+                        <option value="2">Table 2</option>
+                        <option value="3">Table 3</option>
+                        <option value="takeaway">Takeaway</option>
+                    </select>
+                </div>
+                <button class="btn-primary full-width" onclick="submitOrder()">Confirm Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content center-box">
+            <div class="success-icon">✅</div>
+            <h2>Order Sent!</h2>
+            <p>Order #<span id="successOrderNum"></span></p>
+            <p>Please wait, we are preparing your items.</p>
+            <button class="btn-primary full-width" onclick="location.reload()">Order More</button>
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

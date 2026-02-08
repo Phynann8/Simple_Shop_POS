@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Admin - Simple Shop POS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+
+<body class="admin-view">
+
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-card">
+            <h2>🔐 Kitchen Access</h2>
+            <div class="form-group">
+                <input type="email" id="adminEmail" placeholder="Admin Email" class="form-input">
+            </div>
+            <div class="form-group">
+                <input type="password" id="adminPassword" placeholder="Password" class="form-input">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button onclick="login()" class="btn-primary" style="flex:1">Login</button>
+                <button onclick="register()" class="btn-primary"
+                    style="flex:1; background:var(--text-sec);">Register</button>
+            </div>
+            <p id="loginError" class="error-msg"></p>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="brand">👨‍🍳 Kitchen</div>
+        <nav>
+            <button class="nav-btn active" onclick="showSection('orders')">🔥 Orders</button>
+            <button class="nav-btn" onclick="showSection('history')">📜 History</button>
+            <button class="nav-btn" onclick="showSection('menu')">🍔 Menu</button>
+            <button class="nav-btn mt-auto" onclick="logout()">🚪 Logout</button>
+        </nav>
+    </div>
+
+    <main class="main-content">
+        <!-- Header -->
+        <header class="admin-header">
+            <h2 id="pageTitle">Live Orders</h2>
+            <div class="header-actions">
+                <span id="connectionStatus" class="status-online">Online</span>
+            </div>
+        </header>
+
+        <!-- Orders Grid -->
+        <div id="ordersSection" class="section active">
+            <div class="orders-grid" id="ordersGrid">
+                <!-- Orders populate here -->
+                <div class="loading-spinner">Waiting for orders...</div>
+            </div>
+        </div>
+
+        <!-- Menu Management Section -->
+        <div id="menuSection" class="section">
+            <div class="menu-toolbar">
+                <button class="btn-primary" onclick="openItemModal()">+ Add New Item</button>
+            </div>
+            <div class="menu-list" id="adminMenuList">
+                <!-- Menu Items populate here -->
+            </div>
+        </div>
+
+        <!-- History Section -->
+
+        <div id="historySection" class="section">
+            <h2 style="margin-bottom:20px;">Sales Overview</h2>
+
+            <!-- Stats Cards -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-label">Total Sales Today</div>
+                    <div class="stat-value" id="statTotalSales">$0.00</div>
+                    <div class="stat-sub">Orders: <span id="statOrderCount">0</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">This Week</div>
+                    <div class="stat-value" id="statWeeklySales">$0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Last 30 Days</div>
+                    <div class="stat-value" id="statMonthlySales">$0.00</div>
+                </div>
+            </div>
+
+            <!-- Chart & Filter Row -->
+            <div class="chart-filter-row">
+                <!-- Simple Chart -->
+                <div class="chart-box">
+                    <h3>Last 7 Days Activity</h3>
+                    <div id="salesChartContainer"
+                        style="display:flex; align-items:flex-end; height:120px; padding-top:20px; gap:8px;">
+                        <!-- JS renders bars here -->
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-box">
+                    <h3>Filter History</h3>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="historyDateFilter" class="form-input" onchange="loadOrderHistory(true)">
+                    </div>
+                    <button class="btn-primary" style="width:100%"
+                        onclick="document.getElementById('historyDateFilter').value=''; loadOrderHistory(true)">Clear
+                        Filter</button>
+                </div>
+            </div>
+
+            <!-- History Table -->
+            <div class="history-table-container">
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="text-align:left; border-bottom:2px solid var(--border);">
+                            <th style="padding:15px;">Time</th>
+                            <th style="padding:15px;">Order #</th>
+                            <th style="padding:15px;">Table</th>
+                            <th style="padding:15px;">Items</th>
+                            <th style="padding:15px;">Total</th>
+                            <th style="padding:15px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <!-- Rows populate here -->
+                    </tbody>
+                </table>
+                <div style="text-align:center; padding:20px;">
+                    <button id="btnLoadMore" class="btn-base"
+                        style="background:var(--bg-body); color:var(--text-sec); display:none;"
+                        onclick="loadOrderHistory(false)">Load More</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden Receipt Template (for printing) -->
+        <div id="printArea" class="print-only"></div>
+
+    </main>
+
+    <!-- Item Modal -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Manage Item</h3>
+                <button onclick="closeItemModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="itemId">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="itemName" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="itemCategory" class="form-input">
+                        <option value="coffee">Coffee</option>
+                        <option value="tea">Tea</option>
+                        <option value="food">Food</option>
+                        <option value="dessert">Dessert</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Price ($)</label>
+                    <input type="number" id="itemPrice" step="0.50" class="form-input">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="deleteMenuItem()" id="btnDelete" class="btn-danger"
+                    style="display:none;">Delete</button>
+                <button onclick="saveMenuItem()" class="btn-primary">Save Item</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
